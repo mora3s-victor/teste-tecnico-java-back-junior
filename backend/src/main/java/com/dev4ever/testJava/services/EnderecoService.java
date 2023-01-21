@@ -1,9 +1,8 @@
 package com.dev4ever.testJava.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import javax.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.dev4ever.testJava.dto.EnderecoDTO;
+import com.dev4ever.testJava.dto.EnderecoInsertDTO;
 import com.dev4ever.testJava.entities.Endereco;
 import com.dev4ever.testJava.entities.enums.TipoEndereco;
 import com.dev4ever.testJava.repositories.EnderecoRepository;
@@ -44,38 +44,28 @@ public class EnderecoService {
 	}
 
 	@Transactional
-	public EnderecoDTO insert(EnderecoDTO dto) {
-		try {
-			Endereco entity = new Endereco();
-			entity = setAddressType(entity, dto);
-			entity.setLogradouro(dto.getLogradouro());
-			entity.setCep(dto.getCep());
-			entity.setNumero(dto.getNumero());
-			entity.setPessoa(pessoaRepository.getOne(dto.getIdPessoa()));
-			entity = repository.save(entity);
-			return new EnderecoDTO(entity);
-		} catch (EntityNotFoundException e) {
-			throw new ResourceNotFoundException("Id não encontrado: " + dto.getIdPessoa());
-		}catch(DataIntegrityViolationException e) {
-			throw new DatabaseException("Violação de integridade");
-		}
+	public EnderecoDTO insert(EnderecoInsertDTO dto) {
+
+		Endereco entity = new Endereco();
+		entity.setLogradouro(dto.getLogradouro());
+		entity.setCep(dto.getCep());
+		entity.setNumero(dto.getNumero());
+		entity.setPessoa(pessoaRepository.getOne(dto.getIdPessoa()));
+		entity = setAddressType(entity, dto);
+		entity = repository.save(entity);
+		return new EnderecoDTO(entity);
 	}
 
 	@Transactional
 	public EnderecoDTO update(Long id, EnderecoDTO dto) {
-		try {
-			Endereco entity = repository.getOne(id);
-			entity = setAddressType(entity, dto);
-			entity.setLogradouro(dto.getLogradouro());
-			entity.setCep(dto.getCep());
-			entity.setNumero(dto.getNumero());
-			entity.setTipo(dto.getTipo());
-			entity = repository.save(entity);
-			return new EnderecoDTO(entity);
 
-		} catch (EntityNotFoundException e) {
-			throw new ResourceNotFoundException("Id não encontrado: " + id);
-		}
+		Endereco entity = repository.getOne(id);
+		entity.setLogradouro(dto.getLogradouro());
+		entity.setCep(dto.getCep());
+		entity.setNumero(dto.getNumero());
+		entity = setAddressType(entity, dto);
+		entity = repository.save(entity);
+		return new EnderecoDTO(entity);
 	}
 
 	public void delete(Long id) {
@@ -88,19 +78,24 @@ public class EnderecoService {
 		}
 	}
 
-	/*Se for o primeiro endereco do usuário, esse será o principal. Caso não seja o primeiro, e o usuário
-	queira que o novo endereço seja o principal, então os outros endereços se tornarão secundários 
-	e o novo será o principal*/	
-		public Endereco setAddressType(Endereco entity, EnderecoDTO dto) {
+	/*
+	 * Se for o primeiro endereco do usuário, esse será o principal. Caso não seja o
+	 * primeiro, e o usuário queira que o novo endereço seja o principal, então os
+	 * outros endereços se tornarão secundários e o novo será o principal
+	 */
+	public Endereco setAddressType(Endereco entity, EnderecoDTO dto) {
 
-		List<Endereco> list = repository.findByPessoa(pessoaRepository.getOne(dto.getIdPessoa()));
+		List<Endereco> list = new ArrayList<>();
 
 		TipoEndereco principal = TipoEndereco.PRINCIPAL;
 		TipoEndereco secundario = TipoEndereco.SECUNDARIO;
-
-		if (list.isEmpty()) {
-			entity.setTipo(principal);
-			return entity;
+		
+		if (entity.getPessoa() != null) {
+			list = repository.findByPessoa(entity.getPessoa());	
+			if (list.isEmpty()) {
+				entity.setTipo(principal);
+				return entity;
+			}
 		}
 
 		if (dto.getTipo() == principal) {
@@ -108,7 +103,7 @@ public class EnderecoService {
 				if (end.getTipo() == principal) {
 					end.setTipo(secundario);
 					update(end.getId(), new EnderecoDTO(end));
-					break;
+				
 				}
 			}
 			entity.setTipo(principal);

@@ -2,6 +2,8 @@ package com.dev4ever.testJava.resources;
 
 import java.net.URI;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,7 +41,7 @@ public class PessoaResource {
 	}
 
 	@PostMapping
-	public ResponseEntity<PessoaDTO> insert(@RequestBody PessoaDTO dto){
+	public ResponseEntity<PessoaDTO> insert(@Valid @RequestBody PessoaDTO dto){
 		dto = service.insert(dto);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(dto.getId()).toUri();
 		return ResponseEntity.created(uri).body(dto);
@@ -47,7 +49,7 @@ public class PessoaResource {
 
 
 	@PutMapping(value = "/{id}")
-	public ResponseEntity<PessoaDTO> update(@PathVariable Long id, @RequestBody PessoaDTO dto){
+	public ResponseEntity<PessoaDTO> update(@PathVariable Long id,@Valid @RequestBody PessoaDTO dto){
 		dto = service.update(id,dto);
 		return ResponseEntity.ok().body(dto);
 	}

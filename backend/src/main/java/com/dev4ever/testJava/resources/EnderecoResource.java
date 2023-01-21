@@ -2,6 +2,8 @@ package com.dev4ever.testJava.resources;
 
 import java.net.URI;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.dev4ever.testJava.dto.EnderecoDTO;
+import com.dev4ever.testJava.dto.EnderecoInsertDTO;
 import com.dev4ever.testJava.services.EnderecoService;
 
 @RestController
@@ -39,15 +42,15 @@ public class EnderecoResource {
 	}
 
 	@PostMapping
-	public ResponseEntity<EnderecoDTO> insert(@RequestBody EnderecoDTO dto){
-		dto = service.insert(dto);
+	public ResponseEntity<EnderecoDTO> insert(@Valid @RequestBody EnderecoInsertDTO dto){
+		EnderecoDTO newDto = service.insert(dto);
 		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(dto.getId()).toUri();
-		return ResponseEntity.created(uri).body(dto);
+		return ResponseEntity.created(uri).body(newDto);
 	}
 
 
 	@PutMapping(value = "/{id}")
-	public ResponseEntity<EnderecoDTO> update(@PathVariable Long id, @RequestBody EnderecoDTO dto){
+	public ResponseEntity<EnderecoDTO> update(@PathVariable Long id, @Valid @RequestBody EnderecoDTO dto){
 		dto = service.update(id,dto);
 		return ResponseEntity.ok().body(dto);
 	}

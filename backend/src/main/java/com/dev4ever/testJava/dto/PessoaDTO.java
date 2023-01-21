@@ -5,6 +5,10 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Past;
+import javax.validation.constraints.Size;
+
 import com.dev4ever.testJava.entities.Endereco;
 import com.dev4ever.testJava.entities.Pessoa;
 
@@ -12,8 +16,14 @@ public class PessoaDTO implements Serializable{
 	private static final long serialVersionUID = 1L;
 	
 	private Long id;
+	
+	@Size(min = 4, max = 60, message = "Deve ter entre 4 e 60 caracteres")	
+	@NotBlank(message = "Campo obrigatório")
 	private String nome;
+	
+	@Past(message = "Data de nascimento não pode ser presente ou futura")
 	private Instant dataNascimento;
+	
 	private Set<EnderecoDTO> enderecos = new HashSet<>();
 	
 	public PessoaDTO() {		
